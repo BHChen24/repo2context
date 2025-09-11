@@ -35,10 +35,9 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "repo2context",
-	Aliases: []string{"r2c"},
+	Use:     "r2c",
 	Short:   "Convert repository context to structured markdown for LLMs",
-	Long: `A CLI tool that analyzes your repository structure and generates a comprehensive 
+	Long: `Repo2Context is a CLI tool that analyzes your repository structure and generates a comprehensive 
 markdown file containing all relevant context. This structured output is optimized 
 for Large Language Models (LLMs) to understand your codebase quickly and effectively.
 

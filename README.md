@@ -2,6 +2,11 @@
 
 A CLI tool to convert the repository context to a structured markdown file that's easy for LLMs to understand.
 
+## Special Notes
+
+- For now the tool only allows 1 to 3 paths as input arguments.
+- Please try to create a new branch from "**dev**" and name it as "test/what you are testing(or your username)" to implement your tests. 
+
 ## Description
 
 Repo2Context is a CLI tool that analyzes your repository structure and generates a comprehensive markdown file containing all relevant context. This structured output is optimized for Large Language Models (LLMs) to understand your codebase quickly and effectively.
@@ -56,10 +61,6 @@ r2c -v
 r2c ./src
 r2c ./src ./docs ./README.md
 ```
-
-## Special Notes
-
-- For now the tool only allows 1 to 3 paths as input arguments.
 
 ## TO-DO
 

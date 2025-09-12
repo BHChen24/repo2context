@@ -55,9 +55,8 @@ Features:
 			if err != nil {
 				fmt.Printf("Error getting absolute path for '%s': %v\n", path, err)
 				return
-			} else {
-				fmt.Printf("Read path at: %s\n", absPath)
 			}
+			fmt.Printf("Read path at: %s\n", absPath)
 		}
 	},
 }

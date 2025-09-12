@@ -26,7 +26,7 @@ Goal Features:
 
 ## Installing
 
-To install repo2context, ensure you have [https://go.dev/](GO) installed and follow these steps:
+To install repo2context, ensure you have [Go](https://go.dev/) installed and follow these steps:
 
 ```bash
 # Clone the repository

@@ -24,8 +24,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	// "path/filepath"
 	// "strings"
+
+	"github.com/BHChen24/repo2context/pkg/core"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -49,14 +51,9 @@ Features:
 	Version: "v0.0.1",
 	Args:    cobra.RangeArgs(1, 3),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Implementation will be separated into pkg in the future
-		for _, path := range args {
-			absPath, err := filepath.Abs(path)
-			if err != nil {
-				fmt.Printf("Error getting absolute path for '%s': %v\n", path, err)
-				return
-			}
-			fmt.Printf("Read path at: %s\n", absPath)
+		if err := core.Run(args); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
 		}
 	},
 }
@@ -71,7 +68,8 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+
+cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

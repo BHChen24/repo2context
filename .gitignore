@@ -33,3 +33,6 @@ go.work.sum
 
 # AI agents
 CLAUDE.md
+
+# Experiment
+experiment/

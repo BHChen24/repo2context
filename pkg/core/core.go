@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -11,6 +12,10 @@ func Run(paths []string) error {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return fmt.Errorf("error getting absolute path for '%s': %w", path, err)
+		}
+		// Check if the path exists
+		if _, err := os.Stat(absPath); os.IsNotExist(err) {
+			return fmt.Errorf("path does not exist: %s", absPath)
 		}
 		fmt.Printf("Read path at: %s\n", absPath)
 	}

@@ -11,11 +11,18 @@ func Run(paths []string) error {
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf("error getting absolute path for '%s': %w", path, err)
+			fmt.Fprintf(os.Stderr, "error getting absolute path for '%s': %v\n", path, err)
+			continue
 		}
 		// Check if the path exists
-		if _, err := os.Stat(absPath); os.IsNotExist(err) {
-			return fmt.Errorf("path does not exist: %s", absPath)
+		if _, err := os.Stat(absPath); err != nil {
+			if os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "path does not exist: %s\n", absPath)
+				continue
+			}
+			// TODO: Handle other errors
+			fmt.Fprintf(os.Stderr, "error checking path '%s': %v\n", absPath, err)
+			continue
 		}
 		fmt.Printf("Read path at: %s\n", absPath)
 	}

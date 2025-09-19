@@ -24,8 +24,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	// "path/filepath"
-	// "strings"
 
 	"github.com/BHChen24/repo2context/pkg/core"
 
@@ -33,25 +31,27 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+// Flags
+var cfgFile string    // Config file support is placeholder for future use
+var noGitignore bool
+var outputFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "r2c",
-	Short:   "Convert repository context to structured markdown for LLMs",
-	Long: `Repo2Context is a CLI tool that analyzes your repository structure and generates a comprehensive 
-markdown file containing all relevant context. This structured output is optimized 
-for Large Language Models (LLMs) to understand your codebase quickly and effectively.
+	Short:   "Convert repository context to structured markdown",
+	Long: `Repo2Context analyzes repository structure and generates comprehensive
+markdown documentation with organized sections for easy sharing and analysis.
 
 Features:
 - Scans repository structure and file contents
 - Generates organized markdown with proper sections
-- Allows selective file/directory inclusion with filtering
-- Optimized for LLM consumption and understanding`,
+- Respects .gitignore files by default
+- Supports file filtering and exclusion`,
 	Version: "v0.0.1",
-	Args:    cobra.RangeArgs(1, 3),
+	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := core.Run(args); err != nil {
+		if err := core.Run(args, !noGitignore, outputFile); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -75,15 +75,20 @@ cobra.OnInitialize(initConfig)
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	// Config file support for future use (currently unimplemented yet)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.repo2context.yaml)")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Gitignore control flag
+	rootCmd.Flags().BoolVar(&noGitignore, "no-gitignore", false, "disable automatic .gitignore filtering")
+
+	// Output file flag
+	rootCmd.Flags().StringVarP(&outputFile, "output", "o", "", "save output to file instead of stdout")
+
 
 }
 
 // initConfig reads in config file and ENV variables if set.
+// Config file support 
 func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.

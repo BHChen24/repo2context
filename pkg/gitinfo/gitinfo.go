@@ -7,22 +7,19 @@ import (
 	"strings"
 )
 
-/* 
-IsGitRepository checks if the given path is within a Git repository.
-
-git-rev-parse command is usually used to check git repo status.
-Reference: https://git-scm.com/docs/git-rev-parse
-
-Note: `-C` is for running git command in the given path parameter
-*/
-
+// IsGitRepository checks if a path is within a Git repository
 func IsGitRepository(path string) (bool, error) {
 	cmd := exec.Command("git", "-C", path, "rev-parse", "--is-inside-work-tree")
 	err := cmd.Run()
 	return err == nil, nil
 }
 
-// Git command template
+// GetGitRoot returns the root directory of the git repository
+func GetGitRoot(path string) (string, error) {
+	return runGitCommand(path, "rev-parse", "--show-toplevel")
+}
+
+// runGitCommand executes git commands in a specific directory
 func runGitCommand(path string, args ...string) (string, error) {
 	gitArgs := append([]string{"-C", path}, args...)
 	cmd := exec.Command("git", gitArgs...)
@@ -36,13 +33,7 @@ func runGitCommand(path string, args ...string) (string, error) {
 	return strings.TrimSpace(out.String()), nil
 }
 
-/* 
-GetGitInfo retrieves Git information for the repository at the given path.
-
-Git-log has some special placeholders for printing pretty information.
-Reference: https://git-scm.com/docs/git-log
-Reference2: https://git-scm.com/docs/git-log#_pretty_formats
-*/
+// GetGitInfo retrieves Git information for a repository
 func GetGitInfo(path string) (string, error) {
 	isRepo, err := IsGitRepository(path)
 	if err != nil || !isRepo {
@@ -73,6 +64,5 @@ func GetGitInfo(path string) (string, error) {
 		return "", fmt.Errorf("error getting date: %w", err)
 	}
 
-	// Sprintf still returns a string after printing it to stdout.
 	return fmt.Sprintf("Commit: %s\nBranch: %s\nAuthor: %s\nDate  : %s", commit, branch, author, date), nil
 }

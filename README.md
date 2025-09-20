@@ -66,6 +66,23 @@ sudo mv r2c /usr/local/bin/
 go run . [arguments]
 ```
 
+#### Windows Users
+
+On Windows, you may need to build with `.exe` extension to avoid file association issues:
+
+```bash
+# Build with .exe extension
+go build -o r2c.exe
+
+# Run the executable
+./r2c.exe [arguments]
+
+# Alternative: run directly without building
+go run . [arguments]
+```
+
+**Note**: If Windows shows a "How do you want to open this file?" dialog, it means the system doesn't recognize the executable. Use the `.exe` extension or run with `go run .` instead.
+
 ### Verify Installation
 
 ```bash

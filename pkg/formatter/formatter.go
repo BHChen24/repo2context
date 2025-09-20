@@ -87,7 +87,7 @@ func Format(data interface{}) (string, error) {
 		ext := strings.ToLower(filepath.Ext(file.Path))
 		language := getLanguageFromExtension(ext)
 
-		// Write file content with syntax 
+		// Write file content with syntax highlighting
 		output.WriteString(fmt.Sprintf("```%s\n", language))
 		output.WriteString(file.Content)
 		if !strings.HasSuffix(file.Content, "\n") {

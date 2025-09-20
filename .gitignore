@@ -31,5 +31,15 @@ go.work.sum
 # .idea/
 # .vscode/
 
-# AI agents
+# AI agents related
 CLAUDE.md
+.claude
+
+# Experiment
+experiment/
+
+# IDE related
+.cursorignore
+
+# Local built
+r2c

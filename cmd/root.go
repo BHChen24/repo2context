@@ -38,7 +38,7 @@ var outputFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "r2c",
+	Use:     "r2c [flags] path1 path2 ...",
 	Short:   "Convert repository context to structured markdown",
 	Long: `Repo2Context analyzes repository structure and generates comprehensive
 markdown documentation with organized sections for easy sharing and analysis.

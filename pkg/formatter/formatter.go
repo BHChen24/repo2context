@@ -83,7 +83,7 @@ func Format(data interface{}) (string, error) {
 		}
 		output.WriteString(fmt.Sprintf("### File: %s\n\n", displayPath))
 
-		// Determine file extension for syntax 
+		// Determine file extension for syntax highlighting
 		ext := strings.ToLower(filepath.Ext(file.Path))
 		language := getLanguageFromExtension(ext)
 

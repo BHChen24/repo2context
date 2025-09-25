@@ -13,7 +13,7 @@ import (
 const MaxFileLimit = 5
 
 // Run processes paths and generates repository context output
-func Run(paths []string, respectGitignore bool, outputFile string) error {
+func Run(paths []string, respectGitignore bool, outputFile string, displayLineNum bool) error {
 	// Check if too many files are provided
 	if len(paths) > MaxFileLimit {
 		return fmt.Errorf("too many files specified (%d). Maximum allowed: %d", len(paths), MaxFileLimit)
@@ -37,7 +37,7 @@ func Run(paths []string, respectGitignore bool, outputFile string) error {
 		}
 
 		// Process the path based on whether it's a file or directory
-		err = processPath(absPath, respectGitignore, outputFile)
+		err = processPath(absPath, respectGitignore, outputFile, displayLineNum)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error processing path '%s': %v\n", absPath, err)
 			continue
@@ -47,24 +47,25 @@ func Run(paths []string, respectGitignore bool, outputFile string) error {
 }
 
 // processPath handles a single file or directory
-func processPath(absPath string, respectGitignore bool, outputFile string) error {
+func processPath(absPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
 	stat, err := os.Stat(absPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat path: %w", err)
 	}
 
 	if stat.IsDir() {
-		return processDirectory(absPath, respectGitignore, outputFile)
+		return processDirectory(absPath, respectGitignore, outputFile, displayLineNum)
 	} else {
-		return processFile(absPath, outputFile)
+		return processFile(absPath, outputFile, displayLineNum)
 	}
 }
 
 // processDirectory scans and formats directory output
-func processDirectory(dirPath string, respectGitignore bool, outputFile string) error {
+func processDirectory(dirPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
 	// Scan the directory with options
 	scanResult, err := scanner.ScanDirectoryWithOptions(dirPath, scanner.ScanOptions{
 		RespectGitignore: respectGitignore,
+		DisplayLineNum:   displayLineNum,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to scan directory: %w", err)
@@ -102,13 +103,13 @@ func processDirectory(dirPath string, respectGitignore bool, outputFile string) 
 }
 
 // processFile handles individual file output
-func processFile(filePath string, outputFile string) error {
+func processFile(filePath string, outputFile string, displayLineNum bool) error {
 	// For individual files, treat the parent directory as the root
 	// TODO: Can be improved, don't have a clear idea now
 	parentDir := filepath.Dir(filePath)
 
 	// Read the file content
-	content, err := scanner.Peek(filePath)
+	content, err := scanner.Peek(filePath, displayLineNum)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}

@@ -31,10 +31,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Flags
-var cfgFile string    // Config file support is placeholder for future use
-var noGitignore bool
-var outputFile string
+// Packed all configuration options
+type Config struct {
+	ConfigFile    string
+	NoGitignore   bool
+	OutputFile    string
+	DisplayLineNum bool
+}
+
+// Global config instance
+var config Config
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -51,7 +57,7 @@ Features:
 	Version: "v0.0.1",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := core.Run(args, !noGitignore, outputFile); err != nil {
+		if err := core.Run(args, !config.NoGitignore, config.OutputFile, config.DisplayLineNum); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -76,13 +82,16 @@ cobra.OnInitialize(initConfig)
 	// will be global for your application.
 
 	// Config file support for future use (currently unimplemented yet)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.repo2context.yaml)")
+	rootCmd.PersistentFlags().StringVar(&config.ConfigFile, "config", "", "config file (default is $HOME/.repo2context.yaml)")
 
 	// Gitignore control flag
-	rootCmd.Flags().BoolVar(&noGitignore, "no-gitignore", false, "disable automatic .gitignore filtering")
+	rootCmd.Flags().BoolVar(&config.NoGitignore, "no-gitignore", false, "disable automatic .gitignore filtering")
 
 	// Output file flag
-	rootCmd.Flags().StringVarP(&outputFile, "output", "o", "", "save output to file instead of stdout")
+	rootCmd.Flags().StringVarP(&config.OutputFile, "output", "o", "", "save output to file instead of stdout")
+
+	// Line number display flag
+	rootCmd.Flags().BoolVarP(&config.DisplayLineNum, "line-numbers", "l", false, "display line numbers in file contents")
 
 
 }
@@ -90,9 +99,9 @@ cobra.OnInitialize(initConfig)
 // initConfig reads in config file and ENV variables if set.
 // Config file support 
 func initConfig() {
-	if cfgFile != "" {
+	if config.ConfigFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		viper.SetConfigFile(config.ConfigFile)
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()

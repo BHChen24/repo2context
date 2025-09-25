@@ -205,6 +205,8 @@ func readFileContent(path string) (string, int, error) {
 	lineCount := 0
 
 	for bufScanner.Scan() {
+		// Display line number (Use tab instead of space for alignment)
+		content.WriteString(fmt.Sprintf("%d:\t", lineCount + 1))
 		content.WriteString(bufScanner.Text())
 		content.WriteByte('\n')
 		lineCount++

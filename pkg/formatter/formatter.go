@@ -81,7 +81,8 @@ func Format(data interface{}) (string, error) {
 		if displayPath == "" {
 			displayPath = filepath.Base(file.Path)
 		}
-		output.WriteString(fmt.Sprintf("### File: %s\n\n", displayPath))
+		// output.WriteString(fmt.Sprintf("### File: %s\n\n", displayPath))
+		output.WriteString(fmt.Sprintf("### File: %s (%d bytes)\n\n", displayPath, file.Size))
 
 		// Determine file extension for syntax highlighting
 		ext := strings.ToLower(filepath.Ext(file.Path))

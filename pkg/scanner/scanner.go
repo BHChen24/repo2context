@@ -37,7 +37,7 @@ type ScanResult struct {
 // ScanOptions configures directory scanning
 type ScanOptions struct {
 	RespectGitignore bool
-	// MaxFileLimit?
+	DisplayLineNum   bool
 }
 
 // GetEntryPoint validates a need-to-be-processed target and returns its absolute path
@@ -136,7 +136,7 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 				fileInfo.Size = info.Size()
 
 				// Read file content
-				content, lines, err := readFileContent(path)
+				content, lines, err := readFileContent(path, options.DisplayLineNum)
 				if err != nil {
 					fileInfo.Error = err
 					result.Errors = append(result.Errors, fmt.Sprintf("error reading %s: %v", path, err))
@@ -173,7 +173,7 @@ func Walk(path string) (string, error) {
 }
 
 // Peek reads a single file's content
-func Peek(path string) (string, error) {
+func Peek(path string, displayLineNum bool) (string, error) {
 	absPath, err := GetEntryPoint(path)
 	if err != nil {
 		return "", err
@@ -188,12 +188,12 @@ func Peek(path string) (string, error) {
 		return "", fmt.Errorf("path is a directory, not a file")
 	}
 
-	content, _, err := readFileContent(absPath)
+	content, _, err := readFileContent(absPath, displayLineNum)
 	return content, err
 }
 
 // readFileContent reads a file's content and counts lines
-func readFileContent(path string) (string, int, error) {
+func readFileContent(path string, displayLineNum bool) (string, int, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return "", 0, err
@@ -205,6 +205,10 @@ func readFileContent(path string) (string, int, error) {
 	lineCount := 0
 
 	for bufScanner.Scan() {
+		// Display line number (Use tab instead of space for alignment)
+		if displayLineNum {
+			content.WriteString(fmt.Sprintf("%d:\t", lineCount + 1))
+		}
 		content.WriteString(bufScanner.Text())
 		content.WriteByte('\n')
 		lineCount++

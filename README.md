@@ -140,6 +140,7 @@ r2c file1.go file2.go file3.go
 - `--version, -v`: Show version information
 - `--output, -o`: Save output to file instead of stdout
 - `--no-gitignore`: Disable automatic .gitignore filtering
+- `--line-numbers, -l`: Include line numbers in file contents
 
 **Important Notes:**
 

@@ -159,6 +159,7 @@ func processFile(filePath string, outputFile string, displayLineNum bool) error 
 				IsDir:        false,
 				Size:         stat.Size(),
 				Content:      content,
+				ModTime:      stat.ModTime(),
 				Error:        nil,
 			},
 		},

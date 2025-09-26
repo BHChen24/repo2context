@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/BHChen24/repo2context/pkg/gitignore"
 	"github.com/BHChen24/repo2context/pkg/gitinfo"
 )
-
 
 // FileInfo represents a single file or directory
 type FileInfo struct {
@@ -21,6 +21,7 @@ type FileInfo struct {
 	IsDir        bool
 	Size         int64
 	Content      string
+	ModTime      time.Time
 	Error        error
 }
 
@@ -121,6 +122,8 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 				}
 			}
 		}
+ 
+		info, infoErr := d.Info()
 
 		fileInfo := FileInfo{
 			Path:         path,
@@ -128,26 +131,27 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 			IsDir:        d.IsDir(),
 		}
 
-		if !d.IsDir() {
-			info, err := d.Info()
+		if infoErr != nil {
+			fileInfo.Error = infoErr
+			result.Errors = append(result.Errors, fmt.Sprintf("error getting file info for %s: %v", path, infoErr))
+		} else {
+			fileInfo.ModTime = info.ModTime()
+		}
+
+		if !d.IsDir() && infoErr == nil {
+			fileInfo.Size = info.Size()
+
+			// Read file content
+			content, lines, err := readFileContent(path, options.DisplayLineNum)
 			if err != nil {
 				fileInfo.Error = err
-				result.Errors = append(result.Errors, fmt.Sprintf("error getting file info for %s: %v", path, err))
+				result.Errors = append(result.Errors, fmt.Sprintf("error reading %s: %v", path, err))
 			} else {
-				fileInfo.Size = info.Size()
-
-				// Read file content
-				content, lines, err := readFileContent(path, options.DisplayLineNum)
-				if err != nil {
-					fileInfo.Error = err
-					result.Errors = append(result.Errors, fmt.Sprintf("error reading %s: %v", path, err))
-				} else {
-					fileInfo.Content = content
-					result.TotalLines += lines
-				}
-
-				result.TotalFiles++
+				fileInfo.Content = content
+				result.TotalLines += lines
 			}
+
+			result.TotalFiles++
 		}
 
 		result.Files = append(result.Files, fileInfo)

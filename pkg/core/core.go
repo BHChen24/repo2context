@@ -189,6 +189,7 @@ func processFile(filePath string, flagCfg flagConfig.FlagConfig) error {
 				IsDir:        false,
 				Size:         stat.Size(),
 				Content:      content,
+				ModTime:      stat.ModTime(),
 				Error:        nil,
 			},
 		},

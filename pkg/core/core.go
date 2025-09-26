@@ -7,19 +7,34 @@ import (
 
 	"github.com/BHChen24/repo2context/pkg/formatter"
 	"github.com/BHChen24/repo2context/pkg/scanner"
+	"github.com/BHChen24/repo2context/pkg/flagConfig"
 )
 
 // The maximum number of files/directories that can be processed at once
 const MaxFileLimit = 5
 
+// verboseLog prints message to stderr if verbose mode is enabled
+// arg: other arguments, type free
+func verboseLog(verbose bool, info string, args ...interface{}) {
+	if verbose {
+		fmt.Fprintf(os.Stderr, "-> "+info+"\n", args...)
+	}
+}
+
 // Run processes paths and generates repository context output
-func Run(paths []string, respectGitignore bool, outputFile string, displayLineNum bool) error {
+func Run(paths []string, flagCfg flagConfig.FlagConfig) error {
+	verboseLog(flagCfg.Verbose, "Starting repo2context with %d path(s)", len(paths))
+
 	// Check if too many files are provided
 	if len(paths) > MaxFileLimit {
 		return fmt.Errorf("too many files specified (%d). Maximum allowed: %d", len(paths), MaxFileLimit)
 	}
+
+	verboseLog(flagCfg.Verbose, "Processing paths: %v", paths)
+
 	// Process each path provided
-	for _, path := range paths {
+	for i, path := range paths {
+		verboseLog(flagCfg.Verbose, "Processing path %d/%d: %s", i+1, len(paths), path)
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error getting absolute path for '%s': %v\n", path, err)
@@ -37,45 +52,56 @@ func Run(paths []string, respectGitignore bool, outputFile string, displayLineNu
 		}
 
 		// Process the path based on whether it's a file or directory
-		err = processPath(absPath, respectGitignore, outputFile, displayLineNum)
+		verboseLog(flagCfg.Verbose, "Processing absolute path: %s", absPath)
+		err = processPath(absPath, flagCfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error processing path '%s': %v\n", absPath, err)
 			continue
 		}
+		verboseLog(flagCfg.Verbose, "Successfully processed: %s", absPath)
 	}
+	verboseLog(flagCfg.Verbose, "Completed processing all paths")
 	return nil
 }
 
 // processPath handles a single file or directory
-func processPath(absPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
+func processPath(absPath string, flagCfg flagConfig.FlagConfig) error {
 	stat, err := os.Stat(absPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat path: %w", err)
 	}
 
 	if stat.IsDir() {
-		return processDirectory(absPath, respectGitignore, outputFile, displayLineNum)
+		verboseLog(flagCfg.Verbose, "Detected directory: %s", absPath)
+		return processDirectory(absPath, flagCfg)
 	} else {
-		return processFile(absPath, outputFile, displayLineNum)
+		verboseLog(flagCfg.Verbose, "Detected file: %s", absPath)
+		return processFile(absPath, flagCfg)
 	}
 }
 
 // processDirectory scans and formats directory output
-func processDirectory(dirPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
+func processDirectory(dirPath string, flagCfg flagConfig.FlagConfig) error {
+	verboseLog(flagCfg.Verbose, "Starting directory scan: %s", dirPath)
+	verboseLog(flagCfg.Verbose, "Scan options - NoGitignore: %t, DisplayLineNum: %t", flagCfg.NoGitignore, flagCfg.DisplayLineNum)
+
 	// Scan the directory with options
 	scanResult, err := scanner.ScanDirectoryWithOptions(dirPath, scanner.ScanOptions{
-		RespectGitignore: respectGitignore,
-		DisplayLineNum:   displayLineNum,
+		NoGitignore:    flagCfg.NoGitignore,
+		DisplayLineNum: flagCfg.DisplayLineNum,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to scan directory: %w", err)
 	}
+
+	verboseLog(flagCfg.Verbose, "Directory scan completed - Found %d files, %d total lines", scanResult.TotalFiles, scanResult.TotalLines)
 
 	// Print any errors to stderr
 	for _, errMsg := range scanResult.Errors {
 		fmt.Fprintf(os.Stderr, "Warning: %s\n", errMsg)
 	}
 
+	verboseLog(flagCfg.Verbose, "Creating context data for formatting")
 	// Create context data
 	contextData, err := formatter.NewContextData(scanResult, dirPath)
 	if err != nil {
@@ -83,19 +109,23 @@ func processDirectory(dirPath string, respectGitignore bool, outputFile string, 
 	}
 
 	// Handle output - either to file or stdout
-	if outputFile != "" {
+	if flagCfg.OutputFile != "" {
+		verboseLog(flagCfg.Verbose, "Saving output to file: %s", flagCfg.OutputFile)
 		// Save to file
-		err = formatter.SaveToFile(contextData, outputFile)
+		err = formatter.SaveToFile(contextData, flagCfg.OutputFile)
 		if err != nil {
 			return fmt.Errorf("failed to save to file: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", outputFile)
+		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", flagCfg.OutputFile)
+		verboseLog(flagCfg.Verbose, "File saved successfully")
 	} else {
+		verboseLog(flagCfg.Verbose, "Formatting output for stdout")
 		// Format and output to stdout
 		output, err := formatter.Format(contextData)
 		if err != nil {
 			return fmt.Errorf("failed to format output: %w", err)
 		}
+		verboseLog(flagCfg.Verbose, "Output formatted, writing to stdout")
 		fmt.Print(output)
 	}
 
@@ -103,13 +133,13 @@ func processDirectory(dirPath string, respectGitignore bool, outputFile string, 
 }
 
 // processFile handles individual file output
-func processFile(filePath string, outputFile string, displayLineNum bool) error {
+func processFile(filePath string, flagCfg flagConfig.FlagConfig) error {
 	// For individual files, treat the parent directory as the root
 	// TODO: Can be improved, don't have a clear idea now
 	parentDir := filepath.Dir(filePath)
 
 	// Read the file content
-	content, err := scanner.Peek(filePath, displayLineNum)
+	content, err := scanner.Peek(filePath, flagCfg.DisplayLineNum)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
@@ -159,6 +189,7 @@ func processFile(filePath string, outputFile string, displayLineNum bool) error 
 				IsDir:        false,
 				Size:         stat.Size(),
 				Content:      content,
+				ModTime:      stat.ModTime(),
 				Error:        nil,
 			},
 		},
@@ -175,19 +206,23 @@ func processFile(filePath string, outputFile string, displayLineNum bool) error 
 	}
 
 	// Handle output - either to file or stdout
-	if outputFile != "" {
+	if flagCfg.OutputFile != "" {
+		verboseLog(flagCfg.Verbose, "Saving output to file: %s", flagCfg.OutputFile)
 		// Save to file
-		err = formatter.SaveToFile(contextData, outputFile)
+		err = formatter.SaveToFile(contextData, flagCfg.OutputFile)
 		if err != nil {
 			return fmt.Errorf("failed to save to file: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", outputFile)
+		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", flagCfg.OutputFile)
+		verboseLog(flagCfg.Verbose, "File saved successfully")
 	} else {
+		verboseLog(flagCfg.Verbose, "Formatting output for stdout")
 		// Format and output to stdout
 		output, err := formatter.Format(contextData)
 		if err != nil {
 			return fmt.Errorf("failed to format output: %w", err)
 		}
+		verboseLog(flagCfg.Verbose, "Output formatted, writing to stdout")
 		fmt.Print(output)
 	}
 

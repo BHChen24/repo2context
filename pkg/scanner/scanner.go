@@ -8,11 +8,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/BHChen24/repo2context/pkg/gitignore"
 	"github.com/BHChen24/repo2context/pkg/gitinfo"
 )
-
 
 // FileInfo represents a single file or directory
 type FileInfo struct {
@@ -21,6 +21,7 @@ type FileInfo struct {
 	IsDir        bool
 	Size         int64
 	Content      string
+	ModTime      time.Time
 	Error        error
 }
 
@@ -36,8 +37,8 @@ type ScanResult struct {
 
 // ScanOptions configures directory scanning
 type ScanOptions struct {
-	RespectGitignore bool
-	DisplayLineNum   bool
+	NoGitignore    bool
+	DisplayLineNum bool
 }
 
 // GetEntryPoint validates a need-to-be-processed target and returns its absolute path
@@ -57,7 +58,7 @@ func GetEntryPoint(path string) (string, error) {
 // ScanDirectory scans a directory recursively
 // Ignores files/directories specified in .gitignore by default
 func ScanDirectory(rootPath string) (*ScanResult, error) {
-	return ScanDirectoryWithOptions(rootPath, ScanOptions{RespectGitignore: true})
+	return ScanDirectoryWithOptions(rootPath, ScanOptions{NoGitignore: false})
 }
 
 // ScanDirectoryWithOptions scans a directory with custom options
@@ -76,7 +77,7 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 	var gi *gitignore.GitIgnore
 	var gitignoreBasePath string
 	// Initialize gitignore instance if requested
-	if options.RespectGitignore {
+	if !options.NoGitignore {
 		// Try to find git repository root first
 		gitRoot, gitErr := gitinfo.GetGitRoot(absRoot)
 		if gitErr == nil {
@@ -107,7 +108,8 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 		}
 
 		// Check gitignore rules if enabled
-		if options.RespectGitignore && gi != nil && relPath != "" {
+		// !options.NoGitignore => enable gitignore
+		if !options.NoGitignore && gi != nil && relPath != "" {
 			// Calculate relative path from gitignore base path (git root or scan directory)
 			gitignoreRelPath, gitignoreRelErr := filepath.Rel(gitignoreBasePath, path)
 			if gitignoreRelErr == nil && gitignoreRelPath != "." && gitignoreRelPath != "" {
@@ -120,6 +122,8 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 				}
 			}
 		}
+ 
+		info, infoErr := d.Info()
 
 		fileInfo := FileInfo{
 			Path:         path,
@@ -127,26 +131,27 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 			IsDir:        d.IsDir(),
 		}
 
-		if !d.IsDir() {
-			info, err := d.Info()
+		if infoErr != nil {
+			fileInfo.Error = infoErr
+			result.Errors = append(result.Errors, fmt.Sprintf("error getting file info for %s: %v", path, infoErr))
+		} else {
+			fileInfo.ModTime = info.ModTime()
+		}
+
+		if !d.IsDir() && infoErr == nil {
+			fileInfo.Size = info.Size()
+
+			// Read file content
+			content, lines, err := readFileContent(path, options.DisplayLineNum)
 			if err != nil {
 				fileInfo.Error = err
-				result.Errors = append(result.Errors, fmt.Sprintf("error getting file info for %s: %v", path, err))
+				result.Errors = append(result.Errors, fmt.Sprintf("error reading %s: %v", path, err))
 			} else {
-				fileInfo.Size = info.Size()
-
-				// Read file content
-				content, lines, err := readFileContent(path, options.DisplayLineNum)
-				if err != nil {
-					fileInfo.Error = err
-					result.Errors = append(result.Errors, fmt.Sprintf("error reading %s: %v", path, err))
-				} else {
-					fileInfo.Content = content
-					result.TotalLines += lines
-				}
-
-				result.TotalFiles++
+				fileInfo.Content = content
+				result.TotalLines += lines
 			}
+
+			result.TotalFiles++
 		}
 
 		result.Files = append(result.Files, fileInfo)

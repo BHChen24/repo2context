@@ -12,7 +12,12 @@ import (
 // The maximum number of files/directories that can be processed at once
 const MaxFileLimit = 5
 
-// Run processes paths and generates repository context output
+// Run processes the given filesystem paths and generates repository context output.
+// It enforces a maximum path count (MaxFileLimit) and returns an error if that limit is exceeded.
+// For each path it converts to an absolute path, verifies existence, and dispatches processing
+// while forwarding respectGitignore, outputFile, and displayLineNum. Non-fatal path errors are
+// written to stderr and processing continues for remaining paths; the function returns nil after
+// handling all provided paths unless the initial path count check fails.
 func Run(paths []string, respectGitignore bool, outputFile string, displayLineNum bool) error {
 	// Check if too many files are provided
 	if len(paths) > MaxFileLimit {
@@ -46,7 +51,10 @@ func Run(paths []string, respectGitignore bool, outputFile string, displayLineNu
 	return nil
 }
 
-// processPath handles a single file or directory
+// processPath determines whether absPath refers to a directory or a file and dispatches
+// processing to processDirectory or processFile, forwarding respectGitignore, outputFile,
+// and displayLineNum.
+// It returns any error encountered while stating the path or from the invoked handler.
 func processPath(absPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
 	stat, err := os.Stat(absPath)
 	if err != nil {
@@ -60,7 +68,11 @@ func processPath(absPath string, respectGitignore bool, outputFile string, displ
 	}
 }
 
-// processDirectory scans and formats directory output
+// processDirectory scans dirPath to build repository context data and writes the result
+// to outputFile if provided or to stdout otherwise. It writes non-fatal scan warnings to
+// stderr. respectGitignore controls whether .gitignore rules are honored and displayLineNum
+// toggles including line numbers in file contents. The function returns an error if the
+// scan, context creation, formatting, or file save operation fails.
 func processDirectory(dirPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
 	// Scan the directory with options
 	scanResult, err := scanner.ScanDirectoryWithOptions(dirPath, scanner.ScanOptions{
@@ -102,7 +114,14 @@ func processDirectory(dirPath string, respectGitignore bool, outputFile string, 
 	return nil
 }
 
-// processFile handles individual file output
+// processFile builds a context for a single file and writes the formatted output to the specified output file or to stdout.
+// 
+// It treats the file's parent directory as the scan root, reads the file content (honoring displayLineNum), computes line
+// counts and a display path, constructs a scanner.ScanResult containing one FileInfo entry, and then produces context data
+// that is either saved to outputFile or printed to stdout.
+// 
+// Errors are returned if reading the file, obtaining file info, creating context data, saving to a file, or formatting the
+// output fails.
 func processFile(filePath string, outputFile string, displayLineNum bool) error {
 	// For individual files, treat the parent directory as the root
 	// TODO: Can be improved, don't have a clear idea now

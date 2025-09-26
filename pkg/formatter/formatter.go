@@ -16,7 +16,11 @@ type ContextData struct {
 	GitInfo    string
 }
 
-// Format generates markdown output from repository context data
+// Format generates a Markdown representation of repository context contained in the provided value.
+// The function expects data to be a *ContextData and returns an error if the type does not match.
+// The output includes sections for file system location, git information, directory structure, file contents
+// (each file entry shows a display path and size, and files that are directories, have errors, or have empty
+// content are omitted), and a summary with total files, total lines, and a count of encountered errors.
 func Format(data interface{}) (string, error) {
 	contextData, ok := data.(*ContextData)
 	if !ok {

@@ -81,12 +81,12 @@ func Format(data interface{}) (string, error) {
 		if displayPath == "" {
 			displayPath = filepath.Base(file.Path)
 		}
-		output.WriteString(fmt.Sprintf("### File: %s (%d bytes)\n\n", displayPath, file.Size))
+		output.WriteString(fmt.Sprintf("### File: %s (%d bytes)\t", displayPath, file.Size))
 		// Refer to: https://pkg.go.dev/time
 		if !file.ModTime.IsZero() {
-			output.WriteString(fmt.Sprintf("Modified: %s\n\n", file.ModTime.Format("2006-01-02 15:04:05")))
+			output.WriteString(fmt.Sprintf("(Modified: %s)\n\n", file.ModTime.Format("2006-01-02 15:04:05")))
 		} else {
-			output.WriteString("Modified: unknown\n\n")
+			output.WriteString("(Modified: unknown)\n\n")
 		}
 
 		// Determine file extension for syntax highlighting

@@ -73,6 +73,9 @@ func Execute() {
 	}
 }
 
+// init registers initConfig to run on startup and defines persistent and local Cobra flags,
+// binding them to the package-level config.
+ // Defined flags: --config (config file), --no-gitignore, -o/--output (output file), -l/--line-numbers.
 func init() {
 
 cobra.OnInitialize(initConfig)
@@ -97,7 +100,12 @@ cobra.OnInitialize(initConfig)
 }
 
 // initConfig reads in config file and ENV variables if set.
-// Config file support 
+// initConfig initializes application configuration for the command-line.
+//
+// If Config.ConfigFile is set, that file is used. Otherwise the home directory
+// is searched for a YAML file named ".repo2context". Environment variables are
+// automatically read and override config values. When a config file is successfully
+// loaded, its path is printed to stderr.
 func initConfig() {
 	if config.ConfigFile != "" {
 		// Use config file from the flag.

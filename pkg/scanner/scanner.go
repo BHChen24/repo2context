@@ -60,7 +60,14 @@ func ScanDirectory(rootPath string) (*ScanResult, error) {
 	return ScanDirectoryWithOptions(rootPath, ScanOptions{RespectGitignore: true})
 }
 
-// ScanDirectoryWithOptions scans a directory with custom options
+// ScanDirectoryWithOptions scans the directory at rootPath according to the provided options.
+// It returns a ScanResult populated with discovered files (including per-file content, size, errors),
+// a textual directory tree, total file and line counts, and any collected warnings.
+//
+// If options.RespectGitignore is true, .gitignore rules are applied using the repository root when available;
+// failures to load .gitignore are recorded as warnings in the result but scanning continues.
+// File- and access-related errors encountered during the walk are recorded in result.Errors and do not stop scanning;
+// only a walk-level error is returned as a non-nil error value.
 func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult, error) {
 	absRoot, err := GetEntryPoint(rootPath)
 	if err != nil {
@@ -163,7 +170,8 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 	return result, nil
 }
 
-// Walk returns just the directory tree structure for a path
+// Walk returns the textual directory tree for the given path.
+// It propagates any error encountered while scanning the path.
 func Walk(path string) (string, error) {
 	result, err := ScanDirectory(path)
 	if err != nil {
@@ -172,7 +180,8 @@ func Walk(path string) (string, error) {
 	return result.DirectoryTree, nil
 }
 
-// Peek reads a single file's content
+// Peek reads the content of the file at the specified path.
+// Peek resolves the path to an absolute entry point and returns an error if the path does not exist or refers to a directory. If displayLineNum is true, each line in the returned content is prefixed with its 1-based line number and a tab. The returned string contains the file's full contents; an error is returned on failure.
 func Peek(path string, displayLineNum bool) (string, error) {
 	absPath, err := GetEntryPoint(path)
 	if err != nil {
@@ -192,7 +201,9 @@ func Peek(path string, displayLineNum bool) (string, error) {
 	return content, err
 }
 
-// readFileContent reads a file's content and counts lines
+// readFileContent reads the file at path and produces its full text with optional line-number prefixes.
+// If displayLineNum is true, each line in the returned text is prefixed with its 1-based line number and a tab.
+// It returns the concatenated file content, the total number of lines, and a non-nil error if opening or scanning the file fails.
 func readFileContent(path string, displayLineNum bool) (string, int, error) {
 	file, err := os.Open(path)
 	if err != nil {

@@ -36,8 +36,8 @@ type ScanResult struct {
 
 // ScanOptions configures directory scanning
 type ScanOptions struct {
-	RespectGitignore bool
-	DisplayLineNum   bool
+	NoGitignore    bool
+	DisplayLineNum bool
 }
 
 // GetEntryPoint validates a need-to-be-processed target and returns its absolute path
@@ -57,7 +57,7 @@ func GetEntryPoint(path string) (string, error) {
 // ScanDirectory scans a directory recursively
 // Ignores files/directories specified in .gitignore by default
 func ScanDirectory(rootPath string) (*ScanResult, error) {
-	return ScanDirectoryWithOptions(rootPath, ScanOptions{RespectGitignore: true})
+	return ScanDirectoryWithOptions(rootPath, ScanOptions{NoGitignore: false})
 }
 
 // ScanDirectoryWithOptions scans a directory with custom options
@@ -76,7 +76,7 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 	var gi *gitignore.GitIgnore
 	var gitignoreBasePath string
 	// Initialize gitignore instance if requested
-	if options.RespectGitignore {
+	if !options.NoGitignore {
 		// Try to find git repository root first
 		gitRoot, gitErr := gitinfo.GetGitRoot(absRoot)
 		if gitErr == nil {
@@ -107,7 +107,8 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 		}
 
 		// Check gitignore rules if enabled
-		if options.RespectGitignore && gi != nil && relPath != "" {
+		// !options.NoGitignore => enable gitignore
+		if !options.NoGitignore && gi != nil && relPath != "" {
 			// Calculate relative path from gitignore base path (git root or scan directory)
 			gitignoreRelPath, gitignoreRelErr := filepath.Rel(gitignoreBasePath, path)
 			if gitignoreRelErr == nil && gitignoreRelPath != "." && gitignoreRelPath != "" {

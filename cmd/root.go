@@ -86,7 +86,7 @@ cobra.OnInitialize(initConfig)
 	rootCmd.Flags().BoolVarP(&flagCfg.DisplayLineNum, "line-numbers", "l", false, "display line numbers in file contents")
 
 	// Verbose flag
-	rootCmd.Flags().BoolVarP(&flagCfg.Verbose, "verbose", "v", false, "display verbose output")
+	rootCmd.Flags().BoolVarP(&flagCfg.Verbose, "verbose", "", false, "display verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.

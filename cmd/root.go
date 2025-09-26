@@ -26,21 +26,13 @@ import (
 	"os"
 
 	"github.com/BHChen24/repo2context/pkg/core"
+	"github.com/BHChen24/repo2context/pkg/flagConfig"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// Packed all configuration options
-type Config struct {
-	ConfigFile    string
-	NoGitignore   bool
-	OutputFile    string
-	DisplayLineNum bool
-}
-
-// Global config instance
-var config Config
+var flagCfg flagConfig.FlagConfig
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -57,7 +49,7 @@ Features:
 	Version: "v0.0.1",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := core.Run(args, !config.NoGitignore, config.OutputFile, config.DisplayLineNum); err != nil {
+		if err := core.Run(args, flagCfg); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -81,27 +73,28 @@ cobra.OnInitialize(initConfig)
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// Config file support for future use (currently unimplemented yet)
-	rootCmd.PersistentFlags().StringVar(&config.ConfigFile, "config", "", "config file (default is $HOME/.repo2context.yaml)")
+	// Env Config file support for future use (currently unimplemented yet)
+	rootCmd.PersistentFlags().StringVar(&flagCfg.ConfigFile, "config", "", "config file (default is $HOME/.repo2context.yaml)")
 
 	// Gitignore control flag
-	rootCmd.Flags().BoolVar(&config.NoGitignore, "no-gitignore", false, "disable automatic .gitignore filtering")
+	rootCmd.Flags().BoolVar(&flagCfg.NoGitignore, "no-gitignore", false, "disable automatic .gitignore filtering")
 
 	// Output file flag
-	rootCmd.Flags().StringVarP(&config.OutputFile, "output", "o", "", "save output to file instead of stdout")
+	rootCmd.Flags().StringVarP(&flagCfg.OutputFile, "output", "o", "", "save output to file instead of stdout")
 
 	// Line number display flag
-	rootCmd.Flags().BoolVarP(&config.DisplayLineNum, "line-numbers", "l", false, "display line numbers in file contents")
+	rootCmd.Flags().BoolVarP(&flagCfg.DisplayLineNum, "line-numbers", "l", false, "display line numbers in file contents")
 
-
+	// Verbose flag
+	rootCmd.Flags().BoolVarP(&flagCfg.Verbose, "verbose", "v", false, "display verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
-// Config file support 
+// Env config file support 
 func initConfig() {
-	if config.ConfigFile != "" {
+	if flagCfg.ConfigFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(config.ConfigFile)
+		viper.SetConfigFile(flagCfg.ConfigFile)
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()

@@ -7,13 +7,14 @@ import (
 
 	"github.com/BHChen24/repo2context/pkg/formatter"
 	"github.com/BHChen24/repo2context/pkg/scanner"
+	"github.com/BHChen24/repo2context/pkg/flagConfig"
 )
 
 // The maximum number of files/directories that can be processed at once
 const MaxFileLimit = 5
 
 // Run processes paths and generates repository context output
-func Run(paths []string, respectGitignore bool, outputFile string, displayLineNum bool) error {
+func Run(paths []string, flagCfg flagConfig.FlagConfig) error {
 	// Check if too many files are provided
 	if len(paths) > MaxFileLimit {
 		return fmt.Errorf("too many files specified (%d). Maximum allowed: %d", len(paths), MaxFileLimit)
@@ -37,7 +38,7 @@ func Run(paths []string, respectGitignore bool, outputFile string, displayLineNu
 		}
 
 		// Process the path based on whether it's a file or directory
-		err = processPath(absPath, respectGitignore, outputFile, displayLineNum)
+		err = processPath(absPath, flagCfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error processing path '%s': %v\n", absPath, err)
 			continue
@@ -47,25 +48,25 @@ func Run(paths []string, respectGitignore bool, outputFile string, displayLineNu
 }
 
 // processPath handles a single file or directory
-func processPath(absPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
+func processPath(absPath string, flagCfg flagConfig.FlagConfig) error {
 	stat, err := os.Stat(absPath)
 	if err != nil {
 		return fmt.Errorf("failed to stat path: %w", err)
 	}
 
 	if stat.IsDir() {
-		return processDirectory(absPath, respectGitignore, outputFile, displayLineNum)
+		return processDirectory(absPath, flagCfg)
 	} else {
-		return processFile(absPath, outputFile, displayLineNum)
+		return processFile(absPath, flagCfg)
 	}
 }
 
 // processDirectory scans and formats directory output
-func processDirectory(dirPath string, respectGitignore bool, outputFile string, displayLineNum bool) error {
+func processDirectory(dirPath string, flagCfg flagConfig.FlagConfig) error {
 	// Scan the directory with options
 	scanResult, err := scanner.ScanDirectoryWithOptions(dirPath, scanner.ScanOptions{
-		RespectGitignore: respectGitignore,
-		DisplayLineNum:   displayLineNum,
+		NoGitignore:    flagCfg.NoGitignore,
+		DisplayLineNum: flagCfg.DisplayLineNum,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to scan directory: %w", err)
@@ -83,13 +84,13 @@ func processDirectory(dirPath string, respectGitignore bool, outputFile string, 
 	}
 
 	// Handle output - either to file or stdout
-	if outputFile != "" {
+	if flagCfg.OutputFile != "" {
 		// Save to file
-		err = formatter.SaveToFile(contextData, outputFile)
+		err = formatter.SaveToFile(contextData, flagCfg.OutputFile)
 		if err != nil {
 			return fmt.Errorf("failed to save to file: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", outputFile)
+		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", flagCfg.OutputFile)
 	} else {
 		// Format and output to stdout
 		output, err := formatter.Format(contextData)
@@ -103,13 +104,13 @@ func processDirectory(dirPath string, respectGitignore bool, outputFile string, 
 }
 
 // processFile handles individual file output
-func processFile(filePath string, outputFile string, displayLineNum bool) error {
+func processFile(filePath string, flagCfg flagConfig.FlagConfig) error {
 	// For individual files, treat the parent directory as the root
 	// TODO: Can be improved, don't have a clear idea now
 	parentDir := filepath.Dir(filePath)
 
 	// Read the file content
-	content, err := scanner.Peek(filePath, displayLineNum)
+	content, err := scanner.Peek(filePath, flagCfg.DisplayLineNum)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
@@ -175,13 +176,13 @@ func processFile(filePath string, outputFile string, displayLineNum bool) error 
 	}
 
 	// Handle output - either to file or stdout
-	if outputFile != "" {
+	if flagCfg.OutputFile != "" {
 		// Save to file
-		err = formatter.SaveToFile(contextData, outputFile)
+		err = formatter.SaveToFile(contextData, flagCfg.OutputFile)
 		if err != nil {
 			return fmt.Errorf("failed to save to file: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", outputFile)
+		fmt.Fprintf(os.Stderr, "Output saved to: %s\n", flagCfg.OutputFile)
 	} else {
 		// Format and output to stdout
 		output, err := formatter.Format(contextData)

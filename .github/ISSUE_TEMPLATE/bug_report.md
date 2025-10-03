@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: "[Bug] "
+title: "[Bug] (issue title) "
 labels: ''
 assignees: ''
 
@@ -23,11 +23,11 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Environment: **
+**Environment**
  - Device: [e.g. Macbook M4]
  - OS: [e.g., MacOS 15 (Sequoia)]
  - Browser [e.g. chrome, safari, N/A]
- - Other
+ - Extra
 
 **Additional context**
 Add any other context about the problem here.

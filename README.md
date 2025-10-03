@@ -29,6 +29,8 @@ Goal Features:
 
 - **Output to File**: Save results using `--output/-o` flag instead of stdout redirection
 - **Gitignore Integration**: Automatic `.gitignore` respect with `--no-gitignore` override
+- **TOML Configuration File**: Support for `.repo2context-config.toml` in the current directory for default options
+
 
 ## Core Functionality
 
@@ -132,6 +134,37 @@ r2c --no-gitignore . --output full-context.md
 
 # Process multiple files (up to 5 files/directories)
 r2c file1.go file2.go file3.go
+
+# Use configuration file for defaults (CLI flags override)
+r2c .
+```
+
+### Configuration File
+Repo2context supports a TOML configuration file  which can be placed in the root directory that allows you to set default options for the tool.
+
+### Creating a Configuration File
+Create a file named `.r2c-config.toml` in the root of your project directory with the following structure:
+
+```toml
+output = "output.md"
+no_gitignore = true
+display_line_num = true
+verbose = true
+```
+
+### Config File Behavior
+- Values in the configuration file will be used as defaults if no CLI flags are provided.
+- CLI flags will always override the configuration file settings.
+- If no configuration file is found, the tool will use its built-in defaults.
+- The file must be located in the current working directory where you run the command.
+
+### Example usage with Config File
+```bash
+# Uses config defaults (e.g., verbose=true, output=output.md)
+r2c .
+
+# Overrides config (verbose=false despite config setting)
+r2c --verbose=false .
 ```
 
 ### Flags

@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/BHChen24/repo2context/pkg/core"
 	"github.com/BHChen24/repo2context/pkg/flagConfig"
@@ -94,37 +93,12 @@ func initConfig() {
 		cwd, err := os.Getwd()
 		cobra.CheckErr(err)
 
-		// Look for dotfile TOML in cwd
-		candidates := []string{
-			filepath.Join(cwd, ".r2c.toml"),
-			filepath.Join(cwd, ".r2c-config.toml"),
-		}
-
-		found := false
-		for _, c := range candidates {
-			if _, err := os.Stat(c); err == nil {
-				viper.SetConfigFile(c)
-				viper.SetConfigType("toml")
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			entries, err := os.ReadDir(cwd)
-			cobra.CheckErr(err)
-			for _, e := range entries {
-				name := e.Name()
-				if strings.HasPrefix(name, ".r2c") && strings.HasSuffix(name, ".toml") {
-					viper.SetConfigFile(filepath.Join(cwd, name))
-					viper.SetConfigType("toml")
-					found = true
-					break
-				}
-			}
-		}
-
-		if !found {
+		// Look for specific dotfile TOML in cwd
+		configFile := filepath.Join(cwd, ".r2c-config.toml")
+		if _, err := os.Stat(configFile); err == nil {
+			viper.SetConfigFile(configFile)
+			viper.SetConfigType("toml")
+		} else {
 			// fallback to home YAML config
 			home, err := os.UserHomeDir()
 			cobra.CheckErr(err)

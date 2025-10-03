@@ -1,0 +1,4 @@
+output = "from-config.md"
+no_gitignore = true
+display_line_num = true
+verbose = true

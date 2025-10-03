@@ -136,14 +136,17 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read env vars
 
-	// Read config
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	} else {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+	// Read config with enhanced error handling
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok && flagCfg.ConfigFile == "" {
+			// No config file found, but none was explicitly specified - this is OK
+		} else {
+			// Config file was specified or another error occurred
 			fmt.Fprintf(os.Stderr, "Error reading config file: %v\n", err)
 			os.Exit(1)
 		}
+	} else {
+		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 
 	// Unmarshal into flagCfg (CLI flags already bound; CLI overrides TOML automatically)

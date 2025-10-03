@@ -44,3 +44,7 @@ experiment/
 # Local built
 r2c
 repo2context
+
+# Config files
+.r2c-config.toml
+.repo2context-config.toml

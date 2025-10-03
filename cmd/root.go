@@ -24,6 +24,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/BHChen24/repo2context/pkg/core"
 	"github.com/BHChen24/repo2context/pkg/flagConfig"
@@ -36,8 +37,8 @@ var flagCfg flagConfig.FlagConfig
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "r2c [flags] path1 path2 ...",
-	Short:   "Convert repository context to structured markdown",
+	Use:   "r2c [flags] path1 path2 ...",
+	Short: "Convert repository context to structured markdown",
 	Long: `Repo2Context analyzes repository structure and generates comprehensive
 markdown documentation with organized sections for easy sharing and analysis.
 
@@ -66,50 +67,65 @@ func Execute() {
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 
-cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// Env Config file support for future use (currently unimplemented yet)
+	// Persistent config file flag
 	rootCmd.PersistentFlags().StringVar(&flagCfg.ConfigFile, "config", "", "config file (default is $HOME/.repo2context.yaml)")
 
-	// Gitignore control flag
+	// Other CLI flags
 	rootCmd.Flags().BoolVar(&flagCfg.NoGitignore, "no-gitignore", false, "disable automatic .gitignore filtering")
-
-	// Output file flag
 	rootCmd.Flags().StringVarP(&flagCfg.OutputFile, "output", "o", "", "save output to file instead of stdout")
-
-	// Line number display flag
 	rootCmd.Flags().BoolVarP(&flagCfg.DisplayLineNum, "line-numbers", "l", false, "display line numbers in file contents")
-
-	// Verbose flag
 	rootCmd.Flags().BoolVarP(&flagCfg.Verbose, "verbose", "", false, "display verbose output")
+
+	// Bind flags to Viper
+	viper.BindPFlag("no_gitignore", rootCmd.Flags().Lookup("no-gitignore"))
+	viper.BindPFlag("output", rootCmd.Flags().Lookup("output"))
+	viper.BindPFlag("display_line_num", rootCmd.Flags().Lookup("line-numbers"))
+	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
 }
 
-// initConfig reads in config file and ENV variables if set.
-// Env config file support 
 func initConfig() {
+	// Determine config file location
 	if flagCfg.ConfigFile != "" {
-		// Use config file from the flag.
 		viper.SetConfigFile(flagCfg.ConfigFile)
 	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
+		cwd, err := os.Getwd()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".repo2context" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".repo2context")
+		// Look for specific dotfile TOML in cwd
+		configFile := filepath.Join(cwd, ".r2c-config.toml")
+		if _, err := os.Stat(configFile); err == nil {
+			viper.SetConfigFile(configFile)
+			viper.SetConfigType("toml")
+		} else {
+			// fallback to home YAML config
+			home, err := os.UserHomeDir()
+			cobra.CheckErr(err)
+			viper.AddConfigPath(home)
+			viper.SetConfigType("yaml")
+			viper.SetConfigName(".repo2context")
+		}
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv() // read env vars
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	// Read config with enhanced error handling
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok && flagCfg.ConfigFile == "" {
+			// No config file found, but none was explicitly specified - this is OK
+		} else {
+			// Config file was specified or another error occurred
+			fmt.Fprintf(os.Stderr, "Error reading config file: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	}
+
+	// Unmarshal into flagCfg (CLI flags already bound; CLI overrides TOML automatically)
+	if err := viper.Unmarshal(&flagCfg); err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing config file: %v\n", err)
+		os.Exit(1)
 	}
 }

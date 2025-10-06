@@ -226,18 +226,23 @@ func readFileContent(path string, displayLineNum bool) (string, int, error) {
 	return content.String(), lineCount, nil
 }
 
+// Helper function for generating directory tree
+func buildPathMap(files []FileInfo) map[string]bool {
+	pathMap := make(map[string]bool)
+	for _, file := range files {
+		if file.RelativePath != "" {
+			pathMap[file.RelativePath] = file.IsDir
+		}
+	}
+	return pathMap
+}
 
 // This creates a text representation of directory structure
 // I am considering to move tree functions to a separate package
 // (after I peeked other's repo)
 func generateDirectoryTree(files []FileInfo, rootPath string) string { 
 	// Build a map of all paths for easy lookup
-	pathMap := make(map[string]bool) // path -> isDir
-	for _, file := range files {
-		if file.RelativePath != "" {
-			pathMap[file.RelativePath] = file.IsDir
-		}
-	}
+	pathMap := buildPathMap(files)
 
 	// Get all unique directory paths and sort them
 	var allPaths []string

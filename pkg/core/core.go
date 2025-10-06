@@ -10,9 +10,6 @@ import (
 	"github.com/BHChen24/repo2context/pkg/flagConfig"
 )
 
-// The maximum number of files/directories that can be processed at once
-const MaxFileLimit = 5
-
 // verboseLog prints message to stderr if verbose mode is enabled
 // arg: other arguments, type free
 func verboseLog(verbose bool, info string, args ...interface{}) {
@@ -26,8 +23,8 @@ func Run(paths []string, flagCfg flagConfig.FlagConfig) error {
 	verboseLog(flagCfg.Verbose, "Starting repo2context with %d path(s)", len(paths))
 
 	// Check if too many files are provided
-	if len(paths) > MaxFileLimit {
-		return fmt.Errorf("too many files specified (%d). Maximum allowed: %d", len(paths), MaxFileLimit)
+	if len(paths) > 5 {
+		return fmt.Errorf("too many files specified (%d). Maximum allowed: %d", len(paths), 5)
 	}
 
 	verboseLog(flagCfg.Verbose, "Processing paths: %v", paths)

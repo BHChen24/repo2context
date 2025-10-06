@@ -129,10 +129,25 @@ func processDirectory(dirPath string, flagCfg flagConfig.FlagConfig) error {
 	return nil
 }
 
+func countLines(content string) int {
+	lines := 0
+	if content != "" {
+		for _, char := range content {
+			if char == '\n' {
+				lines++
+			}
+		}
+		// Add 1 if content doesn't end with newline but has content
+		if len(content) > 0 && content[len(content)-1] != '\n' {
+			lines++
+		}
+	}
+	return lines
+}
+
 // processFile handles individual file output
 func processFile(filePath string, flagCfg flagConfig.FlagConfig) error {
 	// For individual files, treat the parent directory as the root
-	// TODO: Can be improved, don't have a clear idea now
 	parentDir := filepath.Dir(filePath)
 
 	// Read the file content
@@ -155,18 +170,7 @@ func processFile(filePath string, flagCfg flagConfig.FlagConfig) error {
 	relPath, _ := filepath.Rel(parentDir, filePath)
 
 	// Count lines in content
-	lines := 0
-	if content != "" {
-		for _, char := range content {
-			if char == '\n' {
-				lines++
-			}
-		}
-		// Add 1 if content doesn't end with newline but has content
-		if len(content) > 0 && content[len(content)-1] != '\n' {
-			lines++
-		}
-	}
+	lines := countLines(content)
 
 	// For single files, show the full path structure from current directory
 	cwd, _ := os.Getwd()

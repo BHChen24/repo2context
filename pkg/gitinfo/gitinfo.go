@@ -7,16 +7,20 @@ import (
 	"strings"
 )
 
+// This argument is duplicated too many times, so we put it in a constant
+// There will be a command collector if needed in later version
+const revParse = "rev-parse"
+
 // IsGitRepository checks if a path is within a Git repository
 func IsGitRepository(path string) (bool, error) {
-	cmd := exec.Command("git", "-C", path, "rev-parse", "--is-inside-work-tree")
+	cmd := exec.Command("git", "-C", path, revParse, "--is-inside-work-tree")
 	err := cmd.Run()
 	return err == nil, nil
 }
 
 // GetGitRoot returns the root directory of the git repository
 func GetGitRoot(path string) (string, error) {
-	return runGitCommand(path, "rev-parse", "--show-toplevel")
+	return runGitCommand(path, revParse, "--show-toplevel")
 }
 
 // runGitCommand executes git commands in a specific directory
@@ -47,7 +51,7 @@ func GetGitInfo(path string) (string, error) {
 	}
 
 	// Get branch name
-	branch, err := runGitCommand(path, "rev-parse", "--abbrev-ref", "HEAD")
+	branch, err := runGitCommand(path, revParse, "--abbrev-ref", "HEAD")
 	if err != nil {
 		return "", fmt.Errorf("error getting branch: %w", err)
 	}

@@ -111,6 +111,11 @@ func Format(data interface{}) (string, error) {
 	output.WriteString(fmt.Sprintf("- Total files: %d\n", contextData.ScanResult.TotalFiles))
 	output.WriteString(fmt.Sprintf("- Total lines: %d\n", contextData.ScanResult.TotalLines))
 
+	// Add token count if available
+	if contextData.ScanResult.TotalTokens > 0 {
+		output.WriteString(fmt.Sprintf("- Total tokens: %d (o200k_base encoding)\n", contextData.ScanResult.TotalTokens))
+	}
+
 	// Add errors if any
 	if len(contextData.ScanResult.Errors) > 0 {
 		output.WriteString(fmt.Sprintf("- Errors encountered: %d\n", len(contextData.ScanResult.Errors)))

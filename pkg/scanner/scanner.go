@@ -22,6 +22,7 @@ type FileInfo struct {
 	Size         int64
 	Content      string
 	ModTime      time.Time
+	TokenCount   int
 	Error        error
 }
 
@@ -32,6 +33,7 @@ type ScanResult struct {
 	DirectoryTree string
 	TotalFiles    int
 	TotalLines    int
+	TotalTokens   int
 	Errors        []string
 }
 
@@ -177,6 +179,11 @@ func Walk(path string) (string, error) {
 	return result.DirectoryTree, nil
 }
 
+// RegenerateDirectoryTree regenerates the directory tree from scan result
+func RegenerateDirectoryTree(scanResult *ScanResult) string {
+	return generateDirectoryTree(scanResult.Files, scanResult.RootPath)
+}
+
 // Peek reads a single file's content
 func Peek(path string, displayLineNum bool) (string, error) {
 	absPath, err := GetEntryPoint(path)
@@ -237,12 +244,21 @@ func buildPathMap(files []FileInfo) map[string]bool {
 	return pathMap
 }
 
-// This creates a text representation of directory structure
-// I am considering to move tree functions to a separate package
-// (after I peeked other's repo)
-func generateDirectoryTree(files []FileInfo, rootPath string) string { 
+// Helper function to build token count map
+func buildTokenCountMap(files []FileInfo) map[string]int {
+	tokenMap := make(map[string]int)
+	for _, file := range files {
+		if file.RelativePath != "" && !file.IsDir {
+			tokenMap[file.RelativePath] = file.TokenCount
+		}
+	}
+	return tokenMap
+}
+
+func generateDirectoryTree(files []FileInfo, rootPath string) string {
 	// Build a map of all paths for easy lookup
 	pathMap := buildPathMap(files)
+	tokenMap := buildTokenCountMap(files)
 
 	// Get all unique directory paths and sort them
 	var allPaths []string
@@ -278,7 +294,12 @@ func generateDirectoryTree(files []FileInfo, rootPath string) string {
 				if pathMap[currentPath] {
 					result.WriteString(fmt.Sprintf("%s%s/\n", indent, parts[i]))
 				} else {
-					result.WriteString(fmt.Sprintf("%s%s\n", indent, parts[i]))
+					// This is a file - check if we have token count
+					if tokenCount, hasTokens := tokenMap[currentPath]; hasTokens && tokenCount > 0 {
+						result.WriteString(fmt.Sprintf("%s%s (%d tokens)\n", indent, parts[i], tokenCount))
+					} else {
+						result.WriteString(fmt.Sprintf("%s%s\n", indent, parts[i]))
+					}
 				}
 			} else {
 				// This is a parent directory

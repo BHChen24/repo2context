@@ -5,9 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/BHChen24/repo2context/pkg/flagConfig"
 	"github.com/BHChen24/repo2context/pkg/formatter"
 	"github.com/BHChen24/repo2context/pkg/scanner"
-	"github.com/BHChen24/repo2context/pkg/flagConfig"
+	tokencounter "github.com/BHChen24/repo2context/pkg/tokenCounter"
 )
 
 // verboseLog prints message to stderr if verbose mode is enabled
@@ -16,6 +17,53 @@ func verboseLog(verbose bool, info string, args ...interface{}) {
 	if verbose {
 		fmt.Fprintf(os.Stderr, "-> "+info+"\n", args...)
 	}
+}
+
+// countTokensInScanResult counts tokens for all files in the scan result
+func countTokensInScanResult(scanResult *scanner.ScanResult, verbose bool) error {
+	verboseLog(verbose, "Starting token counting...")
+
+	// Create token counter with default encoding (o200k_base)
+	tc, err := tokencounter.NewTokenCounter("")
+	if err != nil {
+		return fmt.Errorf("failed to create token counter: %w", err)
+	}
+
+	totalTokens := 0
+	fileCount := 0
+
+	// Count tokens for each file
+	for i := range scanResult.Files {
+		file := &scanResult.Files[i]
+
+		// Skip directories and files with errors
+		if file.IsDir || file.Error != nil {
+			continue
+		}
+
+		// Skip empty files
+		if file.Content == "" {
+			continue
+		}
+
+		// Count tokens
+		count, err := tc.CountTokensWithPath(file.Content, file.Path)
+		if err != nil {
+			verboseLog(verbose, "Warning: failed to count tokens for %s: %v", file.RelativePath, err)
+			continue
+		}
+
+		// Store per-file token count
+		file.TokenCount = count
+		totalTokens += count
+		fileCount++
+		verboseLog(verbose, "  %s: %d tokens", file.RelativePath, count)
+	}
+
+	scanResult.TotalTokens = totalTokens
+	verboseLog(verbose, "Token counting completed - %d files, %d total tokens", fileCount, totalTokens)
+
+	return nil
 }
 
 // Run processes paths and generates repository context output
@@ -96,6 +144,15 @@ func processDirectory(dirPath string, flagCfg flagConfig.FlagConfig) error {
 	// Print any errors to stderr
 	for _, errMsg := range scanResult.Errors {
 		fmt.Fprintf(os.Stderr, "Warning: %s\n", errMsg)
+	}
+
+	// Count tokens if flag is enabled
+	if flagCfg.CountTokens {
+		if err := countTokensInScanResult(scanResult, flagCfg.Verbose); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: token counting failed: %v\n", err)
+		}
+		// Regenerate directory tree with token counts
+		scanResult.DirectoryTree = scanner.RegenerateDirectoryTree(scanResult)
 	}
 
 	verboseLog(flagCfg.Verbose, "Creating context data for formatting")
@@ -198,6 +255,15 @@ func processFile(filePath string, flagCfg flagConfig.FlagConfig) error {
 		TotalFiles:    1,
 		TotalLines:    lines,
 		Errors:        []string{},
+	}
+
+	// Count tokens if flag is enabled
+	if flagCfg.CountTokens {
+		if err := countTokensInScanResult(scanResult, flagCfg.Verbose); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: token counting failed: %v\n", err)
+		}
+		// Regenerate directory tree with token counts
+		scanResult.DirectoryTree = scanner.RegenerateDirectoryTree(scanResult)
 	}
 
 	// Create context data

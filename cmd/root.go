@@ -77,12 +77,14 @@ func init() {
 	rootCmd.Flags().StringVarP(&flagCfg.OutputFile, "output", "o", "", "save output to file instead of stdout")
 	rootCmd.Flags().BoolVarP(&flagCfg.DisplayLineNum, "line-numbers", "l", false, "display line numbers in file contents")
 	rootCmd.Flags().BoolVarP(&flagCfg.Verbose, "verbose", "", false, "display verbose output")
+	rootCmd.Flags().BoolVarP(&flagCfg.CountTokens, "count-tokens", "t", false, "count tokens in file contents")
 
 	// Bind flags to Viper
 	viper.BindPFlag("no_gitignore", rootCmd.Flags().Lookup("no-gitignore"))
 	viper.BindPFlag("output", rootCmd.Flags().Lookup("output"))
 	viper.BindPFlag("display_line_num", rootCmd.Flags().Lookup("line-numbers"))
 	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
+	viper.BindPFlag("count_tokens", rootCmd.Flags().Lookup("count-tokens"))
 }
 
 func initConfig() {

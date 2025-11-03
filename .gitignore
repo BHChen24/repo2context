@@ -47,3 +47,5 @@ repo2context
 
 # Config files
 .r2c-config.toml
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md

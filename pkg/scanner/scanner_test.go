@@ -226,7 +226,7 @@ func TestBuildPathMap_EmptyRelativePath(t *testing.T) {
 	}
 
 	if val {
-		t.Fatal("Expected empty RelativePath to be skipped")
+		t.Fatal("Expected file to be marked as false (not directory), got true")
 	}
 
 }

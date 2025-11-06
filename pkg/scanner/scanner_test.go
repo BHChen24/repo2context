@@ -48,6 +48,9 @@ func TestGetEntryPoint_CurrentDirectory(t *testing.T) {
 		t.Fatal("Expected non-empty path, got empty")
 	}
 
+	if !filepath.IsAbs(result) {
+		t.Error("Expected absolute path, got relative")
+	}
 }
 
 func TestGetEntryPoint_RelativePath(t *testing.T) {

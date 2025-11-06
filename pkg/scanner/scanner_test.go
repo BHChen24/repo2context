@@ -80,18 +80,17 @@ func TestGetEntryPoint_RelativePath(t *testing.T) {
 	result, err := GetEntryPoint(testFile)
 
 	// Then
-	if !filepath.IsAbs(result) {
-		t.Error("Expected absolute path, got relative")
-	}
-
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if !filepath.IsAbs(result) {
+		t.Error("Expected absolute path, got relative")
 	}
 
 	if result == "" {
 		t.Fatal("Expected non-empty path, got empty")
 	}
-
 }
 
 func TestGetEntryPoint_PathWithSpaces(t *testing.T) {

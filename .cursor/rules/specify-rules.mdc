@@ -1,0 +1,29 @@
+# repo2context Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-11-05
+
+## Active Technologies
+
+- Go 1.25.1 (001-core-tests)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for Go 1.25.1
+
+## Code Style
+
+Go 1.25.1: Follow standard conventions
+
+## Recent Changes
+
+- 001-core-tests: Added Go 1.25.1
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

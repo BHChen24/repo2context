@@ -284,9 +284,6 @@ go build -o r2c
 ./r2c --help
 ./r2c --version
 
-# Test directory processing
-./r2c tests/playground_for_testing/
-
 # Test file processing
 ./r2c pkg/core/core.go
 
@@ -316,11 +313,9 @@ The token counter module has comprehensive unit tests:
 
 ```bash
 # Run token counter tests
-go test ./tests/pkg/tokenCounter/... -v
-
+go test -v
 # Run with benchmarks
-go test ./tests/pkg/tokenCounter/... -bench=. -benchmem
-
+go test -bench=. -benchmem
 ```
 
 ## License

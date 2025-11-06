@@ -14,6 +14,21 @@ import (
 func TestGetEntryPoint_NonExistentPath(t *testing.T) {
 	// TODO: Test with non-existent path
 	// Expected: Should return error
+
+	// Given
+	nonExistentPath := "/this/does/not/exist"
+
+	// When
+	result, err := GetEntryPoint(nonExistentPath)
+
+	// Then
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	} 
+
+	if result != "" {
+		t.Fatalf("Expected empty path, got %s", result)
+	}
 }
 
 func TestGetEntryPoint_CurrentDirectory(t *testing.T) {

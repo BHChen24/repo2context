@@ -80,10 +80,16 @@ func init() {
 	rootCmd.Flags().BoolVarP(&flagCfg.CountTokens, "count-tokens", "t", false, "count tokens in file contents")
 
 	// Bind flags to Viper
+	// nolint: errcheck
+	//nolint:errcheck
 	viper.BindPFlag("no_gitignore", rootCmd.Flags().Lookup("no-gitignore"))
+	//nolint:errcheck
 	viper.BindPFlag("output", rootCmd.Flags().Lookup("output"))
+	//nolint:errcheck
 	viper.BindPFlag("display_line_num", rootCmd.Flags().Lookup("line-numbers"))
+	//nolint:errcheck
 	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
+	//nolint:errcheck
 	viper.BindPFlag("count_tokens", rootCmd.Flags().Lookup("count-tokens"))
 }
 

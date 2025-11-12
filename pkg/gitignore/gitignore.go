@@ -33,7 +33,7 @@ func NewGitIgnore(basePath string) (*GitIgnore, error) {
 	if err != nil {
 		return gi, err // Return empty GitIgnore on error
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	bufScanner := bufio.NewScanner(file)
 	for bufScanner.Scan() {

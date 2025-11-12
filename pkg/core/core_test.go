@@ -31,8 +31,10 @@ func captureStderr(fn func()) string {
 	fn()
 
 	// Close writer and read captured output
+	//nolint:errcheck
 	w.Close()
 	var buf bytes.Buffer
+	//nolint:errcheck
 	io.Copy(&buf, r)
 
 	return buf.String()
@@ -404,10 +406,10 @@ func TestCountTokensInScanResult_SpecialCharacters(t *testing.T) {
 
 func TestCountTokensInScanResult_TableDriven(t *testing.T) {
 	tests := []struct {
-		name              string
-		files             []scanner.FileInfo
-		expectError       bool
-		expectTotalZero   bool
+		name               string
+		files              []scanner.FileInfo
+		expectError        bool
+		expectTotalZero    bool
 		expectFirstNonZero bool
 	}{
 		{

@@ -124,7 +124,7 @@ func ScanDirectoryWithOptions(rootPath string, options ScanOptions) (*ScanResult
 				}
 			}
 		}
- 
+
 		info, infoErr := d.Info()
 
 		fileInfo := FileInfo{
@@ -210,7 +210,7 @@ func readFileContent(path string, displayLineNum bool) (string, int, error) {
 	if err != nil {
 		return "", 0, err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	var content strings.Builder
 	bufScanner := bufio.NewScanner(file)
@@ -219,7 +219,7 @@ func readFileContent(path string, displayLineNum bool) (string, int, error) {
 	for bufScanner.Scan() {
 		// Display line number (Use tab instead of space for alignment)
 		if displayLineNum {
-			content.WriteString(fmt.Sprintf("%d:\t", lineCount + 1))
+			content.WriteString(fmt.Sprintf("%d:\t", lineCount+1))
 		}
 		content.WriteString(bufScanner.Text())
 		content.WriteByte('\n')

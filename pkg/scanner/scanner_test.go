@@ -253,24 +253,24 @@ func TestBuildPathMap_MixedFilesAndDirs(t *testing.T) {
 		t.Fatalf("Expected 4 entries, got %d", len(result))
 	}
 
- cases := map[string]bool{
-	"dir1": true,
-	"file1.txt": false,
-	"dir2": true,
-	"file2.txt": false,
- }
-
- for path, expected := range cases {
-	
-	val, ok := result[path]
-	if !ok {
-		t.Fatalf("Expected \"%s\" key to exist", path)
+	cases := map[string]bool{
+		"dir1":      true,
+		"file1.txt": false,
+		"dir2":      true,
+		"file2.txt": false,
 	}
 
-	if val != expected {
-		t.Fatalf("Expected %v for \"%s\", got %v", expected, path, val)
+	for path, expected := range cases {
+
+		val, ok := result[path]
+		if !ok {
+			t.Fatalf("Expected \"%s\" key to exist", path)
+		}
+
+		if val != expected {
+			t.Fatalf("Expected %v for \"%s\", got %v", expected, path, val)
+		}
 	}
- }
 
 }
 

@@ -6,7 +6,6 @@ import (
 	tokencounter "github.com/BHChen24/repo2context/pkg/tokenCounter"
 )
 
-
 // TestNewTokenCounter tests the initialization of TokenCounter with different encodings
 func TestNewTokenCounter(t *testing.T) {
 	tests := []struct {

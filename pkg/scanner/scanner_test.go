@@ -304,3 +304,162 @@ func TestBuildPathMap_DuplicatePaths(t *testing.T) {
 		t.Fatal("Expected last entry to win (IsDir=false)")
 	}
 }
+
+// =============================================================================
+// Tests for GenerateDirectoryTree()
+// =============================================================================
+
+func TestGenerateDirectoryTree_EmptyFiles(t *testing.T) {
+	// Expected: Empty string for no files
+
+	// Given
+	files := []FileInfo{}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := ""
+	if result != expected {
+		t.Errorf("Expected empty string, got %q", result)
+	}
+}
+
+func TestGenerateDirectoryTree_SingleFile(t *testing.T) {
+	// Expected: Just the file name
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "file.txt", IsDir: false, TokenCount: 0},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "file.txt\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateDirectoryTree_SingleDirectory(t *testing.T) {
+	// Expected: Directory with trailing slash
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "dir", IsDir: true, TokenCount: 0},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "dir/\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateDirectoryTree_FileWithTokens(t *testing.T) {
+	// Expected: File with token count displayed
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "file.txt", IsDir: false, TokenCount: 5},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "file.txt (5 tokens)\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateDirectoryTree_FileWithZeroTokens(t *testing.T) {
+	// Expected: File without token count (since 0)
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "file.txt", IsDir: false, TokenCount: 0},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "file.txt\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateDirectoryTree_MixedFilesAndDirs(t *testing.T) {
+	// Expected: Directories end with /, files show tokens if >0
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "dir", IsDir: true, TokenCount: 0},
+		{RelativePath: "file1.txt", IsDir: false, TokenCount: 10},
+		{RelativePath: "file2.txt", IsDir: false, TokenCount: 0},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "dir/\nfile1.txt (10 tokens)\nfile2.txt\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateDirectoryTree_SpecialCharactersInNames(t *testing.T) {
+	// Expected: Handle special characters in file/dir names
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "file-with-dash.txt", IsDir: false, TokenCount: 0},
+		{RelativePath: "dir_with_underscore", IsDir: true, TokenCount: 0},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "dir_with_underscore/\nfile-with-dash.txt\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateDirectoryTree_Sorting(t *testing.T) {
+	// Expected: Paths sorted alphabetically
+
+	// Given
+	files := []FileInfo{
+		{RelativePath: "z.txt", IsDir: false, TokenCount: 0},
+		{RelativePath: "a.txt", IsDir: false, TokenCount: 0},
+		{RelativePath: "m", IsDir: true, TokenCount: 0},
+	}
+	rootPath := "/dummy"
+
+	// When
+	result := generateDirectoryTree(files, rootPath)
+
+	// Then
+	expected := "a.txt\nm/\nz.txt\n"
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}

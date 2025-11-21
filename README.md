@@ -60,6 +60,7 @@ This installs the binary as `repo2context` to your `$GOPATH/bin` (or `$HOME/go/b
 
 **Add Go bin to PATH** (if not already configured):
 
+Linux/macOS:
 ```bash
 # For bash
 echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.bashrc && source ~/.bashrc
@@ -67,6 +68,12 @@ echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.bashrc && source ~/.bashrc
 # For zsh
 echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.zshrc && source ~/.zshrc
 ```
+
+Windows (PowerShell as Administrator):
+```powershell
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$env:USERPROFILE\go\bin", "User")
+```
+Then restart your terminal.
 
 ```bash
 # Verify installation

@@ -50,6 +50,34 @@ The tool respects `.gitignore` files by default and handles permission errors gr
 
 - [Go](https://go.dev/) installed on your system
 
+### Quick Install
+
+```bash
+go install github.com/BHChen24/repo2context@latest
+```
+
+This installs the binary as `repo2context` to your `$GOPATH/bin` (or `$HOME/go/bin` by default).
+
+**Add Go bin to PATH** (if not already configured):
+
+```bash
+# For bash
+echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.bashrc && source ~/.bashrc
+
+# For zsh
+echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.zshrc && source ~/.zshrc
+```
+
+```bash
+# Verify installation
+repo2context --version
+
+# (Optional) Rename to shorter command
+mv ~/go/bin/repo2context ~/go/bin/r2c
+```
+
+### Build from Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/BHChen24/repo2context.git

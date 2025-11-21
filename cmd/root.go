@@ -47,7 +47,7 @@ Features:
 - Generates organized markdown with proper sections
 - Respects .gitignore files by default
 - Supports file filtering and exclusion`,
-	Version: "v0.0.1",
+	Version: "v0.2.2",
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := core.Run(args, flagCfg); err != nil {
